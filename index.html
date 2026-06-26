@@ -1,0 +1,868 @@
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans,'Calibri',sans-serif)}
+:root{
+  --db-bg:#0d1b2e;--db-panel:#0f2040;--db-card:#132340;--db-border:#1d3461;
+  --db-text:#e8eef7;--db-muted:#8ca0c4;--db-teal:#00c2b2;--db-blue:#2b7deb;
+  --db-gold:#f5a623;--db-green:#27c97b;--db-red:#e84040;--db-navy:#0a1628;
+}
+.db{background:var(--db-bg);min-height:100vh;padding:0;font-size:13px;color:var(--db-text)}
+.topbar{background:var(--db-panel);border-bottom:2px solid var(--db-teal);padding:0 20px;height:48px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+.topbar-left{display:flex;align-items:center;gap:12px}
+.topbar-logo{width:28px;height:28px;background:var(--db-teal);border-radius:6px;display:flex;align-items:center;justify-content:center}
+.topbar-logo svg{width:16px;height:16px;fill:#0d1b2e}
+.topbar-title{font-size:14px;font-weight:600;color:var(--db-text);letter-spacing:.3px}
+.topbar-sub{font-size:11px;color:var(--db-muted)}
+.topbar-right{display:flex;align-items:center;gap:8px}
+.tag{background:var(--db-card);border:1px solid var(--db-border);border-radius:4px;padding:3px 10px;font-size:10px;color:var(--db-muted);cursor:pointer;transition:.15s;user-select:none}
+.tag.clickable:hover{border-color:var(--db-teal);color:var(--db-teal)}
+.tag.active{border-color:var(--db-teal);color:var(--db-teal);background:rgba(0,194,178,.08)}
+.sidebar{background:var(--db-panel);width:44px;position:fixed;top:48px;left:0;bottom:0;border-right:1px solid var(--db-border);display:flex;flex-direction:column;align-items:center;padding:12px 0;gap:8px;z-index:9}
+.sb-icon{width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:6px;cursor:pointer;transition:.15s}
+.sb-icon svg{width:16px;height:16px;stroke:var(--db-muted);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.sb-icon:hover svg,.sb-icon.active svg{stroke:var(--db-teal)}
+.sb-icon.active{background:rgba(0,194,178,.1)}
+.main{margin-left:44px;padding:16px 20px;display:flex;flex-direction:column;gap:14px}
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid var(--db-border);gap:16px;flex-wrap:wrap}
+.page-title{font-size:15px;font-weight:600;color:var(--db-text)}
+.page-sub{font-size:11px;color:var(--db-muted)}
+.header-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.filter-bar{display:flex;gap:8px;align-items:center}
+.filter-btn{background:var(--db-card);border:1px solid var(--db-border);border-radius:4px;padding:4px 12px;font-size:10px;color:var(--db-muted);cursor:pointer;transition:.15s}
+.filter-btn.active,.filter-btn:hover{border-color:var(--db-blue);color:var(--db-blue)}
+.filter-btn.active{background:rgba(43,125,235,.08)}
+.filter-note{font-size:9.5px;color:var(--db-muted)}
+.filter-note b{color:var(--db-teal)}
+.page{display:none}
+.page.active{display:flex;flex-direction:column;gap:14px}
+.kpi-row{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;transition:.2s}
+.kpi-row.compact{grid-template-columns:repeat(3,1fr)}
+.kpi-row.compact .kpi-val{font-size:17px}
+.kpi{background:var(--db-card);border:1px solid var(--db-border);border-radius:8px;padding:12px 14px;position:relative;overflow:hidden}
+.kpi::after{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.kpi.teal::after{background:var(--db-teal)}
+.kpi.blue::after{background:var(--db-blue)}
+.kpi.gold::after{background:var(--db-gold)}
+.kpi.green::after{background:var(--db-green)}
+.kpi.red::after{background:var(--db-red)}
+.kpi-label{font-size:9px;color:var(--db-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.kpi-val{font-size:22px;font-weight:700;color:var(--db-text);line-height:1.1;transition:.15s}
+.kpi-delta{font-size:10px;margin-top:5px}
+.kpi-delta.up{color:var(--db-green)}
+.kpi-delta.down{color:var(--db-red)}
+.kpi-delta.neu{color:var(--db-teal)}
+.chart-grid{display:grid;grid-template-columns:1.4fr 1fr .7fr;gap:12px}
+.chart-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.chart-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.panel{background:var(--db-card);border:1px solid var(--db-border);border-radius:8px;padding:14px;display:flex;flex-direction:column}
+.panel-title{font-size:10px;font-weight:600;color:var(--db-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
+.chart-wrap{position:relative;width:100%}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:10px}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--db-muted)}
+.legend-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+.stat-row{display:flex;flex-direction:column;gap:8px}
+.stat-line{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--db-border)}
+.stat-line:last-child{border-bottom:none}
+.stat-name{font-size:11px;color:var(--db-muted)}
+.stat-val{font-size:12px;font-weight:600;color:var(--db-text)}
+.stat-bar-track{height:5px;border-radius:3px;background:var(--db-border);margin-top:5px;overflow:hidden}
+.stat-bar-fill{height:100%;border-radius:3px}
+.badge{display:inline-block;border-radius:3px;padding:2px 6px;font-size:9px;font-weight:600}
+.badge.up{background:rgba(39,201,123,.15);color:var(--db-green)}
+.badge.down{background:rgba(232,64,64,.15);color:var(--db-red)}
+.badge.neu{background:rgba(140,160,196,.15);color:var(--db-muted)}
+.tab-row{display:flex;gap:0;border-bottom:1px solid var(--db-border);margin-bottom:12px}
+.tab{padding:6px 14px;font-size:10px;color:var(--db-muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:.15s}
+.tab.active{color:var(--db-teal);border-bottom-color:var(--db-teal)}
+.footer{padding:8px 20px;border-top:1px solid var(--db-border);display:flex;justify-content:space-between;font-size:9px;color:var(--db-muted);margin-left:44px}
+table.data{width:100%;border-collapse:collapse;font-size:10px}
+table.data th{color:var(--db-teal);text-transform:uppercase;font-size:9px;letter-spacing:.4px;padding:5px 8px;border-bottom:1px solid var(--db-border);font-weight:600;text-align:left}
+table.data td{padding:6px 8px;border-bottom:1px solid rgba(29,52,97,.5);color:var(--db-text)}
+table.data tr:hover td{background:rgba(43,125,235,.07)}
+.mini-chart{height:40px;display:flex;align-items:flex-end;gap:2px}
+.mini-bar{flex:1;border-radius:2px 2px 0 0;min-height:3px;transition:.3s}
+.analysis{margin-top:10px;padding:9px 11px;background:rgba(0,194,178,.06);border-left:3px solid var(--db-teal);border-radius:4px;font-size:10.5px;line-height:1.55;color:#c3d2e8}
+.analysis b{color:var(--db-text)}
+.analysis.empty{border-left-color:var(--db-muted);color:var(--db-muted)}
+.state-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.state-card{background:var(--db-card);border:1px solid var(--db-border);border-radius:8px;padding:14px;cursor:pointer;transition:.15s}
+.state-card:hover{border-color:var(--db-blue)}
+.state-card.active{border-color:var(--db-gold);box-shadow:0 0 0 1px var(--db-gold) inset}
+.state-card-name{font-size:13px;font-weight:700;margin-bottom:10px;color:var(--db-text);display:flex;align-items:center;justify-content:space-between}
+.state-card-row{display:flex;justify-content:space-between;font-size:10px;color:var(--db-muted);padding:3px 0}
+.state-card-row b{color:var(--db-text);font-weight:600}
+.settings-row{display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--db-border);gap:16px}
+.settings-row:last-child{border-bottom:none}
+.settings-label{font-size:12px;color:var(--db-text);font-weight:600}
+.settings-desc{font-size:10px;color:var(--db-muted);margin-top:3px;max-width:420px}
+.switch{position:relative;width:38px;height:20px;background:var(--db-border);border-radius:10px;cursor:pointer;transition:.2s;flex-shrink:0}
+.switch.on{background:var(--db-teal)}
+.switch::after{content:'';position:absolute;width:16px;height:16px;background:#fff;border-radius:50%;top:2px;left:2px;transition:.2s}
+.switch.on::after{left:20px}
+.btn-primary{background:var(--db-teal);color:#0d1b2e;border:none;border-radius:5px;padding:7px 16px;font-size:11px;font-weight:600;cursor:pointer}
+.btn-primary:hover{opacity:.88}
+.btn-secondary{background:transparent;color:var(--db-muted);border:1px solid var(--db-border);border-radius:5px;padding:7px 16px;font-size:11px;font-weight:600;cursor:pointer}
+.btn-secondary:hover{border-color:var(--db-red);color:var(--db-red)}
+.select-input{background:var(--db-bg);border:1px solid var(--db-border);color:var(--db-text);border-radius:5px;padding:6px 10px;font-size:11px}
+.report-text{font-size:11.5px;line-height:1.7;color:var(--db-text)}
+.report-text b{color:var(--db-teal)}
+.flex-between{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+@media print{.sidebar,.topbar,.page-header,.footer{display:none!important}.main{margin-left:0}}
+</style>
+<div class="db">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-logo"><svg viewBox="0 0 16 16"><rect x="2" y="8" width="3" height="6"/><rect x="6.5" y="4" width="3" height="10"/><rect x="11" y="2" width="3" height="12"/></svg></div>
+      <div>
+        <div class="topbar-title">Real Estate Analytics</div>
+        <div class="topbar-sub">Australian Property Market · FY2024–25</div>
+      </div>
+    </div>
+    <div class="topbar-right" id="state-tags">
+      <span class="tag clickable active" data-state="all">All States</span>
+      <span class="tag clickable" data-state="nsw">NSW</span>
+      <span class="tag clickable" data-state="vic">VIC</span>
+      <span class="tag clickable" data-state="qld">QLD</span>
+      <span class="tag clickable" data-state="wa">WA</span>
+      <span class="tag" style="color:var(--db-gold);border-color:var(--db-gold);cursor:default">Last updated: Jun 2025</span>
+    </div>
+  </div>
+
+  <div class="sidebar" id="sidebar">
+    <div class="sb-icon active" data-page="page-dashboard" title="Dashboard"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div>
+    <div class="sb-icon" data-page="page-trends" title="Trends"><svg viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></div>
+    <div class="sb-icon" data-page="page-map" title="Map"><svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg></div>
+    <div class="sb-icon" data-page="page-rental" title="Rental"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+    <div class="sb-icon" data-page="page-reports" title="Reports"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+    <div style="flex:1"></div>
+    <div class="sb-icon" data-page="page-settings" title="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></div>
+  </div>
+
+  <div class="main">
+    <div class="page-header">
+      <div>
+        <div class="page-title" id="page-title">Executive Dashboard</div>
+        <div class="page-sub" id="page-sub">National overview · FY2024–25 · Q3 YTD</div>
+      </div>
+      <div class="header-right">
+        <div class="filter-bar" id="type-filter">
+          <button class="filter-btn active" data-type="all">All property types</button>
+          <button class="filter-btn" data-type="residential">Residential</button>
+          <button class="filter-btn" data-type="commercial">Commercial</button>
+          <button class="filter-btn" data-type="investment">Investment</button>
+        </div>
+        <div class="filter-note">Viewing: <b id="active-filter-note">All States · All property types</b></div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <section class="page active" id="page-dashboard">
+      <div class="kpi-row" id="kpi-row">
+        <div class="kpi teal">
+          <div class="kpi-label">Total listings</div>
+          <div class="kpi-val" id="val-listings">48,312</div>
+          <div class="kpi-delta up" id="delta-listings">▲ 6.4% vs last year</div>
+        </div>
+        <div class="kpi blue">
+          <div class="kpi-label">Median sale price</div>
+          <div class="kpi-val" id="val-median">$892K</div>
+          <div class="kpi-delta up" id="delta-median">▲ 4.1% YoY national</div>
+        </div>
+        <div class="kpi teal">
+          <div class="kpi-label">Avg. days on market</div>
+          <div class="kpi-val" id="val-dom">28</div>
+          <div class="kpi-delta neu" id="delta-dom">▼ 3 days vs FY23–24</div>
+        </div>
+        <div class="kpi green">
+          <div class="kpi-label">Total sales volume</div>
+          <div class="kpi-val" id="val-volume">$43.1B</div>
+          <div class="kpi-delta up" id="delta-volume">▲ 9.2% year-on-year</div>
+        </div>
+        <div class="kpi gold">
+          <div class="kpi-label">Clearance rate</div>
+          <div class="kpi-val" id="val-clearance">74.8%</div>
+          <div class="kpi-delta up" id="delta-clearance">▲ 2.3pts vs 12mo avg</div>
+        </div>
+        <div class="kpi red">
+          <div class="kpi-label">New developments</div>
+          <div class="kpi-val" id="val-newdev">1,204</div>
+          <div class="kpi-delta down" id="delta-newdev">▼ 8.1% supply crunch</div>
+        </div>
+      </div>
+      <div class="analysis" id="analysis-kpi"></div>
+
+      <div class="chart-grid">
+        <div class="panel">
+          <div class="panel-title">Monthly sales volume (AUD billion)</div>
+          <div class="chart-wrap" style="height:200px"><canvas id="c1" role="img" aria-label="Monthly sales volume bar chart July 2024 to June 2025"></canvas></div>
+          <div class="analysis" id="analysis-c1"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">Median price by state (AUD $000s)</div>
+          <div class="chart-wrap" style="height:200px"><canvas id="c2" role="img" aria-label="Horizontal bar chart of median prices by state"></canvas></div>
+          <div class="analysis" id="analysis-c2"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">Property type mix</div>
+          <div class="legend" id="pie-legend"></div>
+          <div class="chart-wrap" style="height:165px"><canvas id="c3" role="img" aria-label="Pie chart of property types"></canvas></div>
+          <div class="analysis" id="analysis-c3"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="flex-between">
+          <div class="panel-title" style="margin-bottom:0">Quick highlights — top growth suburbs</div>
+          <button class="btn-secondary" id="btn-view-report">View full suburb report →</button>
+        </div>
+        <div id="quick-highlights" style="margin-top:10px"></div>
+      </div>
+    </section>
+
+    <!-- TRENDS -->
+    <section class="page" id="page-trends">
+      <div class="chart-grid-2">
+        <div class="panel">
+          <div class="panel-title">5-year national price index (Base 100 = Jul 2020)</div>
+          <div class="legend" style="display:flex;gap:14px;margin-bottom:10px">
+            <span class="legend-item"><span class="legend-dot" style="background:#00c2b2"></span>National</span>
+            <span class="legend-item"><span class="legend-dot" style="background:#2b7deb"></span>Sydney</span>
+            <span class="legend-item"><span class="legend-dot" style="background:#f5a623"></span>Melbourne</span>
+          </div>
+          <div class="chart-wrap" style="height:190px"><canvas id="c4" role="img" aria-label="Line chart showing price index from 2020 to 2025"></canvas></div>
+          <div class="analysis" id="analysis-c4"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">12-month price forecast by scenario</div>
+          <div class="legend" style="display:flex;gap:14px;margin-bottom:10px">
+            <span class="legend-item"><span class="legend-dot" style="background:#27c97b"></span>Bull</span>
+            <span class="legend-item"><span class="legend-dot" style="background:#2b7deb;border-style:dashed"></span>Base</span>
+            <span class="legend-item"><span class="legend-dot" style="background:#f5a623"></span>Bear</span>
+          </div>
+          <div class="chart-wrap" style="height:185px"><canvas id="c6" role="img" aria-label="Line chart of price forecast scenarios Jun 2025 to Jun 2026"></canvas></div>
+          <div class="analysis" id="analysis-c6"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Suburb momentum by state (avg. YoY growth of tracked suburbs)</div>
+        <div class="stat-row" id="momentum-rows"></div>
+        <div class="analysis" id="analysis-momentum"></div>
+      </div>
+    </section>
+
+    <!-- MAP / STATE COMPARISON -->
+    <section class="page" id="page-map">
+      <div class="panel">
+        <div class="panel-title">State &amp; territory snapshot — click a region to filter the dashboard</div>
+        <div class="filter-note" style="margin-bottom:10px">Note: this is a comparison grid, not a geographic map. NSW/VIC/QLD/WA drive live filtering; other regions are shown for context using the same source figures as the median-price chart.</div>
+        <div class="state-grid" id="state-grid"></div>
+        <div class="analysis" id="analysis-map"></div>
+      </div>
+    </section>
+
+    <!-- RENTAL -->
+    <section class="page" id="page-rental">
+      <div class="chart-grid-2">
+        <div class="panel">
+          <div class="panel-title">Gross rental yield by city (%)</div>
+          <div class="chart-wrap" style="height:260px"><canvas id="c5" role="img" aria-label="Horizontal bar showing rental yields by city"></canvas></div>
+          <div class="analysis" id="analysis-c5"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">Estimated weekly rent by city</div>
+          <div class="filter-note" style="margin-bottom:8px">Weekly rent = median price × gross yield ÷ 52. Hobart and Darwin medians are estimated; all other figures are taken directly from this dashboard's own price and yield charts.</div>
+          <table class="data" id="rent-table">
+            <thead><tr><th>City</th><th>Est. median</th><th>Gross yield</th><th>Est. weekly rent</th></tr></thead>
+            <tbody></tbody>
+          </table>
+          <div class="analysis" id="analysis-rent"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- REPORTS -->
+    <section class="page" id="page-reports">
+      <div class="panel">
+        <div class="flex-between">
+          <div class="panel-title" style="margin-bottom:0">Top growth suburbs leaderboard</div>
+          <button class="btn-primary" id="btn-print">Print / export report</button>
+        </div>
+        <div class="tab-row" id="report-tabs" style="margin-top:12px">
+          <div class="tab active" data-tab="all">All states</div>
+          <div class="tab" data-tab="nsw">NSW</div>
+          <div class="tab" data-tab="vic">VIC</div>
+          <div class="tab" data-tab="qld">QLD</div>
+          <div class="tab" data-tab="wa">WA</div>
+        </div>
+        <table class="data">
+          <thead><tr><th>Suburb</th><th>State</th><th>Category</th><th>Median</th><th>Δ YoY</th><th>Trend</th></tr></thead>
+          <tbody id="suburb-table"></tbody>
+        </table>
+        <div class="analysis" id="analysis-suburbs"></div>
+      </div>
+      <div class="chart-grid-2">
+        <div class="panel">
+          <div class="panel-title">Written summary</div>
+          <div class="report-text" id="report-paragraph"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">Segment snapshot — current filters</div>
+          <table class="data" id="segment-table">
+            <thead><tr><th>Metric</th><th>Value</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="page" id="page-settings">
+      <div class="panel">
+        <div class="panel-title">Display preferences</div>
+        <div class="settings-row">
+          <div>
+            <div class="settings-label">Show analysis insights</div>
+            <div class="settings-desc">Display the auto-generated analysis text beneath every chart and table.</div>
+          </div>
+          <div class="switch on" id="toggle-analysis"></div>
+        </div>
+        <div class="settings-row">
+          <div>
+            <div class="settings-label">Compact KPI cards</div>
+            <div class="settings-desc">Show the dashboard's six KPI cards in a denser 3-column layout.</div>
+          </div>
+          <div class="switch" id="toggle-compact"></div>
+        </div>
+        <div class="settings-row">
+          <div>
+            <div class="settings-label">Default region on load</div>
+            <div class="settings-desc">Sets which state filter is applied when you open the dashboard.</div>
+          </div>
+          <select class="select-input" id="select-default-region">
+            <option value="all">All States</option>
+            <option value="nsw">NSW</option>
+            <option value="vic">VIC</option>
+            <option value="qld">QLD</option>
+            <option value="wa">WA</option>
+          </select>
+        </div>
+        <div class="settings-row">
+          <div>
+            <div class="settings-label">Reset all filters</div>
+            <div class="settings-desc">Clears the state and property-type filters back to "All States · All property types".</div>
+          </div>
+          <button class="btn-secondary" id="btn-reset">Reset filters</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">About this data</div>
+        <div class="report-text">Figures throughout this dashboard are illustrative sample data for demonstration purposes, not live market data. State and property-type filters apply modeled weighting factors to the FY2024–25 national baseline so that every KPI, chart, and analysis sentence stays internally consistent when you change filters.</div>
+      </div>
+    </section>
+  </div>
+
+  <div class="footer">
+    <span>Real Estate Analytics Suite · Data Analytics Division · Confidential · Sample data for demonstration</span>
+    <span>FY2024–25 · Last updated June 2025</span>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+(function(){
+const axOpts=(axis)=>({ticks:{color:'#8ca0c4',font:{size:10}},grid:axis==='x'?{color:'rgba(255,255,255,0.05)'}:{color:'rgba(255,255,255,0.08)'},border:{color:'#1d3461'}});
+
+/* ---------- DATA MODEL ---------- */
+const BASE = {listings:48312, median:892, dom:28, volume:43.1, clearance:74.8, newDev:1204,
+  monthly:[3.1,3.4,3.6,3.9,4.2,3.8,3.5,3.7,4.0,4.3,4.6,4.9]};
+
+const STATE_LABEL = {all:'All States', nsw:'NSW', vic:'VIC', qld:'QLD', wa:'WA'};
+const TYPE_LABEL = {all:'All property types', residential:'Residential', commercial:'Commercial', investment:'Investment'};
+
+// ratios relative to the national "all states / all types" baseline above
+const STATE_RATIO = {
+  all:{listings:1,median:1,dom:1,volume:1,clearance:1,newDev:1},
+  nsw:{listings:14977/48312, median:1180/892, dom:24/28, volume:15.8/43.1, clearance:76.2/74.8, newDev:320/1204},
+  vic:{listings:13044/48312, median:890/892,  dom:30/28, volume:11.4/43.1, clearance:72.5/74.8, newDev:295/1204},
+  qld:{listings:10146/48312, median:780/892,  dom:22/28, volume:8.6/43.1,  clearance:77.9/74.8, newDev:240/1204},
+  wa: {listings:5797/48312,  median:680/892,  dom:19/28, volume:5.1/43.1,  clearance:81.3/74.8, newDev:140/1204},
+};
+const STATE_ABS = { // for display-only absolute figures used on the Map page
+  all:{listings:48312, median:892, dom:28, volume:43.1, clearance:74.8, newDev:1204},
+  nsw:{listings:14977, median:1180, dom:24, volume:15.8, clearance:76.2, newDev:320},
+  vic:{listings:13044, median:890,  dom:30, volume:11.4, clearance:72.5, newDev:295},
+  qld:{listings:10146, median:780,  dom:22, volume:8.6,  clearance:77.9, newDev:240},
+  wa: {listings:5797,  median:680,  dom:19, volume:5.1,  clearance:81.3, newDev:140},
+};
+
+const TYPE_RATIO = {
+  all:{listings:1,median:1,dom:1,volume:1,clearance:1,newDev:1},
+  residential:{listings:45100/48312, median:845/892,  dom:27/28, volume:35.4/43.1, clearance:75.6/74.8, newDev:1120/1204},
+  commercial: {listings:1840/48312,  median:1650/892, dom:52/28, volume:4.9/43.1,  clearance:58.2/74.8, newDev:58/1204},
+  investment: {listings:8350/48312,  median:910/892,  dom:24/28, volume:7.3/43.1,  clearance:79.4/74.8, newDev:210/1204},
+};
+
+const MEDIAN_DELTA = {all:4.1, nsw:5.3, vic:2.8, qld:6.7, wa:7.9};
+const CLEARANCE_DELTA = {all:2.3, nsw:1.8, vic:0.9, qld:3.4, wa:4.6};
+const TYPE_DELTA_ADJ = {all:0, residential:0, commercial:-2.8, investment:1.6};
+
+const suburbs=[
+  {suburb:'Cottesloe',state:'WA',type:'House',category:'residential',investment:false,median:'$2.9M',delta:'+18.4%',vals:[14,15,16,15,17,18]},
+  {suburb:'Fremantle',state:'WA',type:'House',category:'residential',investment:true,median:'$1.1M',delta:'+16.8%',vals:[12,13,14,14,15,17]},
+  {suburb:'Noosa Heads',state:'QLD',type:'House',category:'residential',investment:false,median:'$2.4M',delta:'+14.2%',vals:[10,11,12,12,13,14]},
+  {suburb:'Sunshine Beach',state:'QLD',type:'House',category:'residential',investment:true,median:'$2.1M',delta:'+13.5%',vals:[9,10,11,11,12,14]},
+  {suburb:'Mosman',state:'NSW',type:'House',category:'residential',investment:false,median:'$4.2M',delta:'+11.3%',vals:[8,9,9,10,10,11]},
+  {suburb:'Toorak',state:'VIC',type:'House',category:'residential',investment:false,median:'$3.8M',delta:'+9.7%',vals:[7,8,8,9,9,10]},
+  {suburb:'Balmain',state:'NSW',type:'Townhouse',category:'residential',investment:false,median:'$1.95M',delta:'+8.9%',vals:[6,7,7,8,8,9]},
+  {suburb:'Albert Park',state:'VIC',type:'House',category:'residential',investment:false,median:'$2.3M',delta:'+8.1%',vals:[6,7,7,7,8,8]},
+  {suburb:'South Yarra',state:'VIC',type:'Apartment',category:'residential',investment:true,median:'$1.2M',delta:'+7.6%',vals:[5,6,6,7,7,8]},
+  {suburb:'Glebe',state:'NSW',type:'Terrace',category:'residential',investment:true,median:'$1.75M',delta:'+7.2%',vals:[5,5,6,6,7,7]},
+  {suburb:'Fishermans Bend',state:'VIC',type:'Industrial',category:'commercial',investment:true,median:'$1.4M',delta:'+6.5%',vals:[4,5,5,6,6,7]},
+  {suburb:'Milton',state:'QLD',type:'Office',category:'commercial',investment:false,median:'$2.1M',delta:'+5.8%',vals:[3,4,4,5,5,6]},
+];
+
+const CITY_MEDIAN = {Sydney:1180, Melbourne:890, Brisbane:780, Perth:680, Adelaide:650, Canberra:920, Hobart:560, Darwin:495};
+const ESTIMATED_CITIES = ['Hobart','Darwin'];
+const STATE_TO_CITY = {nsw:'Sydney', vic:'Melbourne', qld:'Brisbane', wa:'Perth'};
+
+const PAGE_META = {
+  'page-dashboard':{title:'Executive Dashboard', sub:'National overview · FY2024–25 · Q3 YTD'},
+  'page-trends':{title:'Market Trends & Forecasts', sub:"5-year price index, suburb momentum & 12-month outlook"},
+  'page-map':{title:'State Comparison', sub:'Click a region to filter the entire dashboard'},
+  'page-rental':{title:'Rental Market Analysis', sub:'Gross yields, estimated weekly rents & investor signals'},
+  'page-reports':{title:'Suburb Performance Report', sub:'Detailed growth leaderboard & exportable summary'},
+  'page-settings':{title:'Dashboard Settings', sub:'Display preferences & default filters'},
+};
+
+/* ---------- STATE ---------- */
+let filters = {state:'all', type:'all'};
+let reportTab = 'all';
+let charts = {};
+
+/* ---------- FORMAT HELPERS ---------- */
+const fmtPrice = k => k>=1000 ? '$'+(k/1000).toFixed(2)+'M' : '$'+Math.round(k)+'K';
+const fmtVolume = b => '$'+b.toFixed(1)+'B';
+const fmtInt = n => Math.round(n).toLocaleString();
+const fmtPct = (n,d=1) => n.toFixed(d)+'%';
+const parseDelta = s => parseFloat(s);
+
+/* ---------- COMPUTE ---------- */
+function computeKPIs(f){
+  const s = STATE_RATIO[f.state], t = TYPE_RATIO[f.type];
+  return {
+    listings: BASE.listings*s.listings*t.listings,
+    median: BASE.median*s.median*t.median,
+    dom: BASE.dom*s.dom*t.dom,
+    volume: BASE.volume*s.volume*t.volume,
+    clearance: BASE.clearance*s.clearance*t.clearance,
+    newDev: BASE.newDev*s.newDev*t.newDev,
+  };
+}
+
+/* ---------- RENDER: KPIs ---------- */
+function renderKPIs(){
+  const k = computeKPIs(filters);
+  document.getElementById('val-listings').textContent = fmtInt(k.listings);
+  document.getElementById('val-median').textContent = fmtPrice(k.median);
+  document.getElementById('val-dom').textContent = Math.round(k.dom);
+  document.getElementById('val-volume').textContent = fmtVolume(k.volume);
+  document.getElementById('val-clearance').textContent = fmtPct(k.clearance);
+  document.getElementById('val-newdev').textContent = fmtInt(k.newDev);
+
+  const mDelta = MEDIAN_DELTA[filters.state] + TYPE_DELTA_ADJ[filters.type];
+  const cDelta = CLEARANCE_DELTA[filters.state] + TYPE_DELTA_ADJ[filters.type]*0.4;
+  const scopeTxt = filters.state==='all' ? 'national' : STATE_LABEL[filters.state];
+  document.getElementById('delta-median').textContent = '▲ '+mDelta.toFixed(1)+'% YoY '+scopeTxt;
+  document.getElementById('delta-clearance').textContent = (cDelta>=0?'▲ ':'▼ ')+Math.abs(cDelta).toFixed(1)+'pts vs 12mo avg';
+  document.getElementById('delta-listings').textContent = (filters.state==='all'&&filters.type==='all') ? '▲ 6.4% vs last year' : '— filtered view (see analysis below)';
+  document.getElementById('delta-volume').textContent = (filters.state==='all'&&filters.type==='all') ? '▲ 9.2% year-on-year' : fmtVolume(k.volume)+' in scope';
+  document.getElementById('delta-dom').textContent = (filters.state==='all'&&filters.type==='all') ? '▼ 3 days vs FY23–24' : Math.round(k.dom)+' days for this segment';
+  document.getElementById('delta-newdev').textContent = (filters.state==='all'&&filters.type==='all') ? '▼ 8.1% supply crunch' : fmtInt(k.newDev)+' in scope';
+
+  const pctVsNational = ((k.median-BASE.median)/BASE.median*100);
+  const dir = pctVsNational>=0?'above':'below';
+  document.getElementById('analysis-kpi').innerHTML =
+    `Showing <b>${STATE_LABEL[filters.state]}</b> · <b>${TYPE_LABEL[filters.type]}</b>. Median price is <b>${fmtPrice(k.median)}</b>`+
+    (filters.state!=='all'||filters.type!=='all' ? `, ${Math.abs(pctVsNational).toFixed(0)}% ${dir} the $892K national median` : '')+
+    `, on sales volume of <b>${fmtVolume(k.volume)}</b> across <b>${fmtInt(k.listings)}</b> listings. Clearance rate sits at <b>${fmtPct(k.clearance)}</b>, ${cDelta>=0?'up':'down'} ${Math.abs(cDelta).toFixed(1)} points versus the trailing 12-month average, with an average of <b>${Math.round(k.dom)} days</b> on market.`;
+}
+
+/* ---------- RENDER: c1 monthly volume ---------- */
+function updateMonthlyChart(){
+  const s = STATE_RATIO[filters.state], t = TYPE_RATIO[filters.type];
+  const mult = s.volume*t.volume;
+  const data = BASE.monthly.map(v=>Math.round(v*mult*10)/10);
+  charts.c1.data.datasets[0].data = data;
+  charts.c1.update();
+  const months=['Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar','Apr','May','Jun'];
+  const total = data.reduce((a,b)=>a+b,0);
+  const peakIdx = data.indexOf(Math.max(...data));
+  const growth = ((data[data.length-1]-data[0])/data[0]*100);
+  document.getElementById('analysis-c1').innerHTML =
+    `Total sales volume across the period reached <b>$${total.toFixed(1)}B</b>, peaking in <b>${months[peakIdx]}</b> at $${data[peakIdx].toFixed(1)}B — a ${growth.toFixed(1)}% increase from $${data[0].toFixed(1)}B in July, consistent with seasonal buyer activity building toward mid-year.`;
+}
+
+/* ---------- RENDER: c2 median by state ---------- */
+function updateMedianHighlight(){
+  const labels = charts.c2.data.labels;
+  const vals = charts.c2.data.datasets[0].data;
+  charts.c2.data.datasets[0].backgroundColor = filters.state==='all'
+    ? labels.map(l=> ['NSW','WA'].includes(l) ? '#00c2b2' : '#2b7deb')
+    : labels.map(l=> l.toLowerCase()===filters.state ? '#f5a623' : '#1d3461');
+  charts.c2.update();
+  const sorted = [...vals].sort((a,b)=>b-a);
+  const top = labels[vals.indexOf(sorted[0])], bottom = labels[vals.indexOf(sorted[sorted.length-1])];
+  let extra='';
+  if(filters.state!=='all' && labels.map(l=>l.toLowerCase()).includes(filters.state)){
+    const idx = labels.findIndex(l=>l.toLowerCase()===filters.state);
+    const val = vals[idx];
+    const rank = sorted.indexOf(val)+1;
+    extra = ` <b>${labels[idx]}</b> ranks #${rank} of ${labels.length} tracked states/territories at $${val}K — ${(val/sorted[0]*100).toFixed(0)}% of ${top}'s benchmark median.`;
+  }
+  document.getElementById('analysis-c2').innerHTML =
+    `<b>${top}</b> remains the most expensive market nationally at $${sorted[0]}K median, ${(((sorted[0]-sorted[sorted.length-1])/sorted[sorted.length-1])*100).toFixed(0)}% above <b>${bottom}</b>'s $${sorted[sorted.length-1]}K, the most affordable of the ${labels.length} tracked regions.`+extra;
+}
+
+/* ---------- RENDER: c3 pie ---------- */
+function updatePieAnalysis(){
+  const labels = charts.c3.data.labels, vals = charts.c3.data.datasets[0].data;
+  let note = filters.type==='all'
+    ? `Houses dominate the market at <b>${vals[0]}%</b> of all transactions — more than double units (${vals[1]}%) — while rural property remains a niche segment at just ${vals[3]}%.`
+    : `This mix reflects all national transactions; it isn't re-sliced by the <b>${TYPE_LABEL[filters.type]}</b> filter since property type (house/unit/etc.) and transaction type (residential/commercial/investment) are tracked separately.`;
+  document.getElementById('analysis-c3').innerHTML = note;
+}
+
+/* ---------- RENDER: c4 price index ---------- */
+function updatePriceIndexHighlight(){
+  const map = {nsw:1, vic:2};
+  const emphIdx = map[filters.state];
+  charts.c4.data.datasets.forEach((ds,i)=>{
+    ds.borderWidth = (emphIdx===undefined || i===0 || i===emphIdx) ? 3 : 1;
+  });
+  charts.c4.update();
+  const d = charts.c4.data.datasets;
+  const grow = arr => ((arr[arr.length-1]-arr[0])/arr[0]*100);
+  const natG = grow(d[0].data), sydG = grow(d[1].data), melG = grow(d[2].data);
+  let extra='';
+  if(filters.state==='qld'||filters.state==='wa'){
+    extra = ` ${STATE_LABEL[filters.state]} doesn't have its own index line in this chart — showing the national trend as the closest available reference.`;
+  } else if(filters.state==='vic'){
+    extra = ` Melbourne is growing ${(natG-melG).toFixed(0)} points slower than the national average over this period.`;
+  } else if(filters.state==='nsw'){
+    extra = ` Sydney is outpacing the national average by ${(sydG-natG).toFixed(0)} points over this period.`;
+  }
+  document.getElementById('analysis-c4').innerHTML =
+    `Over the past five years, <b>Sydney</b> prices climbed ${sydG.toFixed(0)}%, well ahead of <b>Melbourne's</b> ${melG.toFixed(0)}% and the national average of ${natG.toFixed(0)}%, underscoring NSW's outsized contribution to national price growth.`+extra;
+}
+
+/* ---------- RENDER: c6 forecast ---------- */
+function updateForecastAnalysis(){
+  const d = charts.c6.data.datasets;
+  const base = d[1].data[0];
+  const bull = d[0].data[d[0].data.length-1], baseEnd = d[1].data[d[1].data.length-1], bear = d[2].data[d[2].data.length-1];
+  const bullPct=((bull-base)/base*100), basePct=((baseEnd-base)/base*100), bearPct=((bear-base)/base*100);
+  document.getElementById('analysis-c6').innerHTML =
+    `Forecast models project a 12-month range of <b>${bearPct.toFixed(1)}%</b> to <b>${bullPct.toFixed(1)}%</b> national price growth (base case <b>${basePct.toFixed(1)}%</b>), a ${(bull-bear).toFixed(0)}-point index gap between bull and bear scenarios reflecting uncertainty around interest rates and supply.`;
+}
+
+/* ---------- RENDER: c5 yield ---------- */
+function updateYieldHighlight(){
+  const labels = charts.c5.data.labels, vals = charts.c5.data.datasets[0].data;
+  const targetCity = STATE_TO_CITY[filters.state];
+  charts.c5.data.datasets[0].backgroundColor = vals.map((v,i)=>{
+    if(targetCity && labels[i]===targetCity) return '#f5a623';
+    return v>=5 ? '#00c2b2' : v>=4 ? '#2b7deb' : '#8ca0c4';
+  });
+  charts.c5.update();
+  const max = Math.max(...vals), min = Math.min(...vals);
+  const maxCity = labels[vals.indexOf(max)], minCity = labels[vals.indexOf(min)];
+  let extra='';
+  if(targetCity){
+    const v = vals[labels.indexOf(targetCity)];
+    extra = ` <b>${targetCity}</b> (proxy for ${STATE_LABEL[filters.state]}) yields <b>${v}%</b> gross.`;
+  }
+  document.getElementById('analysis-c5').innerHTML =
+    `<b>${maxCity}</b> leads all tracked cities at ${max}% gross yield, ${(max-min).toFixed(1)} points above <b>${minCity}</b>'s ${min}% — the lowest-yield, highest-growth capital in this dataset.`+extra;
+}
+
+/* ---------- RENDER: rent table ---------- */
+function renderRentTable(){
+  const labels = charts.c5 ? charts.c5.data.labels : ['Darwin','Perth','Adelaide','Brisbane','Hobart','Canberra','Melbourne','Sydney'];
+  const vals = charts.c5 ? charts.c5.data.datasets[0].data : [6.8,5.9,5.2,4.8,4.5,4.0,3.5,3.7];
+  const tbody = document.querySelector('#rent-table tbody');
+  tbody.innerHTML='';
+  let rows=[];
+  labels.forEach((city,i)=>{
+    const price = CITY_MEDIAN[city];
+    const yieldPct = vals[i];
+    const rent = (price*1000*yieldPct/100)/52;
+    rows.push({city,price,yieldPct,rent});
+  });
+  rows.sort((a,b)=>b.rent-a.rent);
+  rows.forEach(r=>{
+    tbody.innerHTML += `<tr><td style="font-weight:600">${r.city}${ESTIMATED_CITIES.includes(r.city)?' <span class="badge neu">est.</span>':''}</td><td>${fmtPrice(r.price)}</td><td>${r.yieldPct}%</td><td style="font-weight:600;color:#27c97b">$${Math.round(r.rent)}/wk</td></tr>`;
+  });
+  const top = rows[0], bottom = rows[rows.length-1];
+  document.getElementById('analysis-rent').innerHTML =
+    `Estimated weekly rents range from <b>$${Math.round(bottom.rent)}</b> in ${bottom.city} to <b>$${Math.round(top.rent)}</b> in ${top.city}. High-yield regional capitals command rent close to, or exceeding, lower-yield Sydney despite a much lower purchase price — the trade-off investors weigh between yield and capital growth.`;
+}
+
+/* ---------- RENDER: trends momentum panel ---------- */
+function renderMomentum(){
+  const groups={};
+  suburbs.forEach(s=>{
+    const st=s.state;
+    if(!groups[st]) groups[st]=[];
+    groups[st].push(parseDelta(s.delta));
+  });
+  const entries = Object.entries(groups).map(([st,arr])=>({st, avg:arr.reduce((a,b)=>a+b,0)/arr.length, n:arr.length}));
+  entries.sort((a,b)=>b.avg-a.avg);
+  const max = entries[0].avg;
+  const wrap = document.getElementById('momentum-rows');
+  wrap.innerHTML='';
+  entries.forEach(e=>{
+    const pct = (e.avg/max*100).toFixed(0);
+    wrap.innerHTML += `<div class="stat-line"><div style="flex:1"><div class="stat-name">${e.st} <span class="badge neu">${e.n} suburb${e.n>1?'s':''}</span></div><div class="stat-bar-track"><div class="stat-bar-fill" style="width:${pct}%;background:${e.st===filters.state.toUpperCase()?'#f5a623':'#2b7deb'}"></div></div></div><div class="stat-val">+${e.avg.toFixed(1)}%</div></div>`;
+  });
+  document.getElementById('analysis-momentum').innerHTML =
+    `<b>${entries[0].st}</b> suburbs are growing fastest, averaging <b>+${entries[0].avg.toFixed(1)}%</b> YoY across ${entries[0].n} tracked suburb${entries[0].n>1?'s':''} — consistent with that state's lower days-on-market and higher clearance rate elsewhere on this dashboard.`;
+}
+
+/* ---------- RENDER: map page ---------- */
+function renderMapCards(){
+  const grid = document.getElementById('state-grid');
+  grid.innerHTML='';
+  Object.keys(STATE_LABEL).forEach(key=>{
+    const a = STATE_ABS[key];
+    const active = filters.state===key ? ' active' : '';
+    grid.innerHTML += `<div class="state-card${active}" data-state="${key}">
+      <div class="state-card-name">${STATE_LABEL[key]}${active?' <span class="badge up">Active</span>':''}</div>
+      <div class="state-card-row"><span>Median price</span><b>${fmtPrice(a.median)}</b></div>
+      <div class="state-card-row"><span>Listings</span><b>${fmtInt(a.listings)}</b></div>
+      <div class="state-card-row"><span>Clearance</span><b>${fmtPct(a.clearance)}</b></div>
+      <div class="state-card-row"><span>Days on market</span><b>${a.dom}</b></div>
+    </div>`;
+  });
+  document.querySelectorAll('.state-card').forEach(card=>{
+    card.addEventListener('click', ()=> setState(card.dataset.state));
+  });
+  const cur = STATE_ABS[filters.state];
+  document.getElementById('analysis-map').innerHTML =
+    filters.state==='all'
+    ? `Click any region above to filter every KPI, chart, and report on this dashboard to that state.`
+    : `Currently filtered to <b>${STATE_LABEL[filters.state]}</b>: median price ${fmtPrice(cur.median)}, ${fmtInt(cur.listings)} listings, ${fmtPct(cur.clearance)} clearance. Select "All States" to reset.`;
+}
+
+/* ---------- RENDER: quick highlights (dashboard) ---------- */
+function renderQuickHighlights(){
+  const sorted=[...suburbs].sort((a,b)=>parseDelta(b.delta)-parseDelta(a.delta)).slice(0,3);
+  const wrap = document.getElementById('quick-highlights');
+  wrap.innerHTML = sorted.map((s,i)=>`<div class="stat-line"><div class="stat-name">#${i+1} <b style="color:var(--db-text)">${s.suburb}</b>, ${s.state} <span class="badge neu">${s.type}</span></div><div class="stat-val" style="color:#27c97b">${s.delta}</div></div>`).join('');
+}
+
+/* ---------- RENDER: suburb table (reports) ---------- */
+function renderSuburbTable(){
+  const tbody = document.getElementById('suburb-table');
+  const rows = suburbs.filter(s=>{
+    const stateMatch = reportTab==='all' || s.state.toLowerCase()===reportTab;
+    let typeMatch = true;
+    if(filters.type==='residential') typeMatch = s.category==='residential';
+    else if(filters.type==='commercial') typeMatch = s.category==='commercial';
+    else if(filters.type==='investment') typeMatch = !!s.investment;
+    return stateMatch && typeMatch;
+  });
+  tbody.innerHTML='';
+  if(rows.length===0){
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--db-muted);padding:16px">No suburbs match this combination of state and property-type filters.</td></tr>`;
+  } else {
+    rows.forEach(s=>{
+      const maxV=Math.max(...s.vals);
+      const bars=s.vals.map(v=>`<div class="mini-bar" style="background:#2b7deb;height:${Math.round(v/maxV*38)+2}px"></div>`).join('');
+      tbody.innerHTML += `<tr>
+        <td style="font-weight:600">${s.suburb}</td>
+        <td><span class="badge up">${s.state}</span></td>
+        <td><span class="badge ${s.category==='commercial'?'neu':'up'}">${s.category}${s.investment?' · inv.':''}</span></td>
+        <td>${s.median}</td>
+        <td style="color:#27c97b;font-weight:600">${s.delta}</td>
+        <td><div class="mini-chart">${bars}</div></td>
+      </tr>`;
+    });
+  }
+  if(rows.length>0){
+    const avg = rows.reduce((a,s)=>a+parseDelta(s.delta),0)/rows.length;
+    const top = [...rows].sort((a,b)=>parseDelta(b.delta)-parseDelta(a.delta))[0];
+    document.getElementById('analysis-suburbs').innerHTML =
+      `<b>${rows.length}</b> suburb${rows.length>1?'s':''} match the current filters, averaging <b>+${avg.toFixed(1)}%</b> YoY growth. <b>${top.suburb}</b> leads this subset at ${top.delta}.`;
+  } else {
+    document.getElementById('analysis-suburbs').innerHTML = `No suburbs match — try "All states" or "All property types".`;
+  }
+}
+
+/* ---------- RENDER: written report + segment snapshot ---------- */
+function renderReportParagraph(){
+  const rows = suburbs.filter(s=>{
+    const stateMatch = reportTab==='all' || s.state.toLowerCase()===reportTab;
+    let typeMatch = true;
+    if(filters.type==='residential') typeMatch = s.category==='residential';
+    else if(filters.type==='commercial') typeMatch = s.category==='commercial';
+    else if(filters.type==='investment') typeMatch = !!s.investment;
+    return stateMatch && typeMatch;
+  });
+  const globalTop = [...suburbs].sort((a,b)=>parseDelta(b.delta)-parseDelta(a.delta))[0];
+  const el = document.getElementById('report-paragraph');
+  if(rows.length===0){
+    el.innerHTML = `No suburbs match the current filter combination (<b>${reportTab==='all'?'All states':reportTab.toUpperCase()}</b> · <b>${TYPE_LABEL[filters.type]}</b>). Nationally, <b>${globalTop.suburb}</b> (${globalTop.state}) remains the strongest tracked market at ${globalTop.delta} YoY.`;
+    return;
+  }
+  const avg = rows.reduce((a,s)=>a+parseDelta(s.delta),0)/rows.length;
+  const top = [...rows].sort((a,b)=>parseDelta(b.delta)-parseDelta(a.delta))[0];
+  el.innerHTML = `<b>${rows.length}</b> suburb${rows.length>1?'s':''} matched the current filters (<b>${reportTab==='all'?'All states':reportTab.toUpperCase()}</b> · <b>${TYPE_LABEL[filters.type]}</b>), with an average year-on-year growth of <b>+${avg.toFixed(1)}%</b>. <b>${top.suburb}</b> led the group at ${top.delta}. Across all tracked states, <b>${globalTop.suburb}</b> (${globalTop.state}) remains the strongest market nationally at ${globalTop.delta} YoY.`;
+}
+
+function renderSegmentSnapshot(){
+  const k = computeKPIs(filters);
+  const tbody = document.querySelector('#segment-table tbody');
+  tbody.innerHTML = `
+    <tr><td>Filter scope</td><td>${STATE_LABEL[filters.state]} · ${TYPE_LABEL[filters.type]}</td></tr>
+    <tr><td>Total listings</td><td>${fmtInt(k.listings)}</td></tr>
+    <tr><td>Median price</td><td>${fmtPrice(k.median)}</td></tr>
+    <tr><td>Sales volume</td><td>${fmtVolume(k.volume)}</td></tr>
+    <tr><td>Clearance rate</td><td>${fmtPct(k.clearance)}</td></tr>
+    <tr><td>Avg. days on market</td><td>${Math.round(k.dom)}</td></tr>
+    <tr><td>New developments</td><td>${fmtInt(k.newDev)}</td></tr>`;
+}
+
+/* ---------- UI SYNC ---------- */
+function syncFilterUI(){
+  document.querySelectorAll('#state-tags .tag.clickable').forEach(t=>t.classList.toggle('active', t.dataset.state===filters.state));
+  document.querySelectorAll('#type-filter .filter-btn').forEach(b=>b.classList.toggle('active', b.dataset.type===filters.type));
+  document.getElementById('active-filter-note').textContent = `${STATE_LABEL[filters.state]} · ${TYPE_LABEL[filters.type]}`;
+  const sel = document.getElementById('select-default-region');
+  if(sel) sel.value = filters.state;
+}
+
+function setState(state){ filters.state = state; renderAll(); }
+function setType(type){ filters.type = type; renderAll(); }
+
+function renderAll(){
+  renderKPIs();
+  if(charts.c1) updateMonthlyChart();
+  if(charts.c2) updateMedianHighlight();
+  if(charts.c3) updatePieAnalysis();
+  if(charts.c4) updatePriceIndexHighlight();
+  if(charts.c6) updateForecastAnalysis();
+  if(charts.c5){ updateYieldHighlight(); renderRentTable(); }
+  renderMomentum();
+  renderMapCards();
+  renderQuickHighlights();
+  renderSuburbTable();
+  renderReportParagraph();
+  renderSegmentSnapshot();
+  syncFilterUI();
+}
+
+/* ---------- CHART INIT ---------- */
+function initDashboardCharts(){
+  charts.c1 = new Chart(document.getElementById('c1'),{type:'bar',data:{
+    labels:['Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar','Apr','May','Jun'],
+    datasets:[{label:'Volume',data:[...BASE.monthly],backgroundColor:'#2b7deb',borderRadius:3,borderSkipped:false}]
+  },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:v=>'$'+v.raw+'B'}}},scales:{x:axOpts('x'),y:{...axOpts('y'),min:0,ticks:{...axOpts('y').ticks,callback:v=>'$'+v+'B'}}}}});
+
+  charts.c2 = new Chart(document.getElementById('c2'),{type:'bar',data:{
+    labels:['NSW','ACT','VIC','QLD','WA','SA'],
+    datasets:[{label:'Median $000s',data:[1180,920,890,780,680,650],backgroundColor:['#00c2b2','#2b7deb','#2b7deb','#2b7deb','#00c2b2','#2b7deb'],borderRadius:3,borderSkipped:false}]
+  },options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:v=>'$'+v.raw+'K'}}},scales:{x:{...axOpts('x'),ticks:{...axOpts('x').ticks,callback:v=>'$'+v+'K'}},y:axOpts('y')}}});
+
+  const pieData={labels:['House','Unit/Apt','Townhouse','Rural'],datasets:[{data:[52,28,14,6],backgroundColor:['#2b7deb','#00c2b2','#f5a623','#8ca0c4'],borderWidth:2,borderColor:'#132340'}]};
+  const pieLegend=document.getElementById('pie-legend');
+  pieData.labels.forEach((l,i)=>{const s=document.createElement('span');s.className='legend-item';s.innerHTML=`<span class="legend-dot" style="background:${pieData.datasets[0].backgroundColor[i]}"></span>${l} ${pieData.datasets[0].data[i]}%`;pieLegend.appendChild(s)});
+  charts.c3 = new Chart(document.getElementById('c3'),{type:'pie',data:pieData,options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:v=>v.label+': '+v.raw+'%'}}}}});
+}
+
+function initTrendsCharts(){
+  charts.c4 = new Chart(document.getElementById('c4'),{type:'line',data:{
+    labels:['Jul-20','Jan-21','Jul-21','Jan-22','Jul-22','Jan-23','Jul-23','Jan-24','Jul-24','Jan-25','Jun-25'],
+    datasets:[
+      {label:'National',data:[100,110,124,135,128,122,127,133,139,146,151],borderColor:'#00c2b2',backgroundColor:'rgba(0,194,178,.08)',tension:.4,pointRadius:3,pointBackgroundColor:'#00c2b2',fill:true},
+      {label:'Sydney',data:[100,115,132,148,138,129,135,142,150,160,167],borderColor:'#2b7deb',backgroundColor:'transparent',tension:.4,pointRadius:3,pointBackgroundColor:'#2b7deb'},
+      {label:'Melbourne',data:[100,108,118,126,119,113,118,123,128,134,138],borderColor:'#f5a623',backgroundColor:'transparent',tension:.4,pointRadius:3,pointBackgroundColor:'#f5a623'}
+    ]
+  },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:axOpts('x'),y:{...axOpts('y'),min:90}}}});
+
+  charts.c6 = new Chart(document.getElementById('c6'),{type:'line',data:{
+    labels:['Jun-25','Sep-25','Dec-25','Mar-26','Jun-26'],
+    datasets:[
+      {label:'Bull (+9%)',data:[151,156,161,162,165],borderColor:'#27c97b',backgroundColor:'rgba(39,201,123,.08)',tension:.3,pointRadius:4,pointBackgroundColor:'#27c97b',fill:true},
+      {label:'Base (+5%)',data:[151,153,155,157,159],borderColor:'#2b7deb',backgroundColor:'transparent',tension:.3,borderDash:[6,3],pointRadius:4,pointBackgroundColor:'#2b7deb'},
+      {label:'Bear (+1%)',data:[151,150,150,151,152],borderColor:'#f5a623',backgroundColor:'transparent',tension:.3,pointRadius:4,pointBackgroundColor:'#f5a623'}
+    ]
+  },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:axOpts('x'),y:{...axOpts('y'),min:145}}}});
+}
+
+function initRentalChart(){
+  const yieldData={cities:['Darwin','Perth','Adelaide','Brisbane','Hobart','Canberra','Melbourne','Sydney'],vals:[6.8,5.9,5.2,4.8,4.5,4.0,3.5,3.7]};
+  charts.c5 = new Chart(document.getElementById('c5'),{type:'bar',data:{
+    labels:yieldData.cities,
+    datasets:[{label:'Yield %',data:yieldData.vals,backgroundColor:yieldData.vals.map(v=>v>=5?'#00c2b2':v>=4?'#2b7deb':'#8ca0c4'),borderRadius:3,borderSkipped:false}]
+  },options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:v=>v.raw+'%'}}},scales:{x:{...axOpts('x'),ticks:{...axOpts('x').ticks,callback:v=>v+'%'}},y:axOpts('y')}}});
+}
+
+/* ---------- PAGE NAV ---------- */
+function switchPage(pageId){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(pageId).classList.add('active');
+  document.querySelectorAll('.sb-icon').forEach(i=>i.classList.remove('active'));
+  document.querySelector(`.sb-icon[data-page="${pageId}"]`).classList.add('active');
+  const m = PAGE_META[pageId];
+  document.getElementById('page-title').textContent = m.title;
+  document.getElementById('page-sub').textContent = m.sub;
+  if(pageId==='page-trends' && !charts.c4) initTrendsCharts();
+  if(pageId==='page-rental' && !charts.c5) initRentalChart();
+  renderAll();
+}
+
+/* ---------- EVENT LISTENERS ---------- */
+document.querySelectorAll('#state-tags .tag.clickable').forEach(t=>{
+  t.addEventListener('click', ()=> setState(t.dataset.state));
+});
+document.querySelectorAll('#type-filter .filter-btn').forEach(b=>{
+  b.addEventListener('click', ()=> setType(b.dataset.type));
+});
+document.querySelectorAll('.sb-icon').forEach(icon=>{
+  icon.addEventListener('click', ()=> switchPage(icon.dataset.page));
+});
+document.querySelectorAll('#report-tabs .tab').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    document.querySelectorAll('#report-tabs .tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    reportTab = tab.dataset.tab;
+    renderSuburbTable();
+    renderReportParagraph();
+  });
+});
+document.getElementById('btn-view-report').addEventListener('click', ()=> switchPage('page-reports'));
+document.getElementById('btn-print').addEventListener('click', ()=> window.print());
+document.getElementById('btn-reset').addEventListener('click', ()=>{
+  filters = {state:'all', type:'all'};
+  reportTab='all';
+  document.querySelectorAll('#report-tabs .tab').forEach(t=>t.classList.toggle('active', t.dataset.tab==='all'));
+  renderAll();
+});
+document.getElementById('toggle-analysis').addEventListener('click', function(){
+  this.classList.toggle('on');
+  const show = this.classList.contains('on');
+  document.querySelectorAll('.analysis').forEach(el=> el.style.display = show ? '' : 'none');
+});
+document.getElementById('toggle-compact').addEventListener('click', function(){
+  this.classList.toggle('on');
+  document.getElementById('kpi-row').classList.toggle('compact', this.classList.contains('on'));
+});
+document.getElementById('select-default-region').addEventListener('change', function(){
+  setState(this.value);
+});
+
+/* ---------- BOOT ---------- */
+initDashboardCharts();
+renderAll();
+})();
+</script>
